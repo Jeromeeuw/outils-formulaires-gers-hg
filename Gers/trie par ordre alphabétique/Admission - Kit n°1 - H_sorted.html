@@ -1,0 +1,551 @@
+<style media="screen" type="text/css">
+    h4 {
+        font-weight: bold;
+        margin-top: 5px;
+    }
+
+    .blue {
+        background-color: #8DB3E2;
+    }
+
+    .caption {
+        padding: 15px;
+        background-color: #8DB3E2;
+        font-weight: bold;
+    }
+
+    .content {
+        padding: 15px;
+        background-color: #8DB3E2;
+        font-weight: bold;
+    }
+
+    .container-fluid {
+        padding: 10px 0;
+    }
+
+    .mt-1 {
+        margin-top: 10px;
+    }
+
+    .mt-2 {
+        margin-top: 20px;
+    }
+
+    .col-md-9 label,
+    input[type=checkbox],
+    input[type=radio] {
+        cursor: pointer;
+    }
+
+    .labelListMargin label {
+        margin-right: 5px;
+    }
+
+    .labelList label {
+        display: block;
+        width: 100%;
+        margin-right: 5px;
+    }
+
+    table caption {
+        font-weight: bold;
+        font-size: 1.75em;
+        color: #333;
+        padding-top: 0;
+    }
+
+    table thead tr th {
+        color: #666;
+    }
+
+    table thead tr th:first-child {
+        width: 50%;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table-striped>tbody>tr:nth-of-type(odd) {
+        */background-color: #f5f5f5;
+        */
+    }
+
+    .table-bordered,
+    .table-bordered>tbody>tr>td,
+    .table-bordered>tbody>tr>th,
+    .table-bordered>tfoot>tr>td,
+    .table-bordered>tfoot>tr>th,
+    .table-bordered>thead>tr>td,
+    .table-bordered>thead>tr>th {
+        vertical-align: middle;
+    }
+
+    table tr.selected,
+    .table-striped>tbody>tr:nth-of-type(odd).selected {
+        background-color: #0db514;
+        color: #fff;
+        -webkit-transition: background-color 500ms linear;
+        -ms-transition: background-color 500ms linear;
+        transition: background-color 350ms linear;
+        box-shadow: inset 0em 0em 5px #32a137;
+    }
+</style>
+<script>
+    $(document).on('change', 'input[type=number]', function () {
+        var getInputValTest = $(this).val();
+
+        if (getInputValTest > 0) {
+            $(this).parents('tr.empty').removeClass('empty');
+            $(this).parents('div.table.empty').removeClass('empty');
+        } else if (getInputValTest <= 0) {
+            $(this).closest('tr').addClass('empty')
+        }
+    });
+
+    $("div.sidebar-tools.col-sm-3.no-print.ng-scope button.btn.btn-validate.pull-right.ng-binding.ng-scope, #btn-print").click(function () {
+        $('tr.selected').removeClass("selected");
+        $('body, #medform-struct-container, form.form-horizontal, [bind-html-compile="::container.htmlContent"], [ng-if="::container.dataContent"], [ng-if="currentVersion"], .form-struct-body, [ng-init="setForm(formStruct, container)"]').attr("style", "background-color:#ffffff;");
+        $('.container-fluid').attr("style", "padding: 2px 0;");
+        $('.container-fluid:lt(4), .container-fluid:gt(-5)').css("font-size", "70%");
+        $('caption').attr("style", "padding-bottom: 2px;");
+        $('h4, table.table').attr("style", "font-size:70%;margin-bottom: 0;");
+        $('table.table').attr("style", "font-size:70%;");
+        $('.table>thead>tr>th').attr("style", "padding: 4px;");
+        $('.table>tbody>tr>th, .table>tbody>tr>td').attr("style", "padding:0;padding-left:5px;");
+        $('.form-control').removeClass("form-control");
+        $('[ng-hide="hideInput"]').attr("style", "color: #333;");
+
+        $('div.table').each(function () {
+            var currentTable = $(this);
+
+            $(currentTable).find('input[type=number]').each(function () {
+                var currentFirstNumberVal = $(this).eq(0).val();
+
+                if (currentFirstNumberVal) {
+                    $(this).parents('div.table.empty').removeClass('empty');
+                }
+            });
+
+            if ($(this).hasClass("empty")) {
+                var myEl = angular.element(currentTable);
+                myEl.remove();   //removes element
+            }
+        });
+
+        $('tbody tr').each(function () {
+            var currentTr = $(this);
+            $(currentTr).find('input[type=number]').each(function () {
+                var currentFirstNumberVal = $(this).eq(0).val();
+
+                if (currentFirstNumberVal) {
+                    $(this).parents('tr.empty').removeClass('empty');
+                }
+            });
+
+            if ($(this).hasClass("empty")) {
+                var myEl = angular.element(currentTr);
+                myEl.remove();   //removes element
+            }
+        });
+    });
+
+    var timeout = null;
+
+    $(document).on('input', '#rechercher', function (e) {
+        clearTimeout(timeout);
+
+        var keywords = $(this).val();
+        $('tr.empty').removeClass("selected");
+        $(".nbResult").text("").hide();
+
+        if ($.trim(keywords) !== '') {
+            var findElement = $("tbody tr th:containsi('" + keywords + "')");
+            $(".nbResult").html("Nombre de résultat" + ($(findElement).length > 1 ? "s" : "") + ": " + ("<strong>" + $(findElement).length) + "</strong>");
+            $(".nbResult").fadeIn();
+            var elOffset = findElement.offset().top;
+            var elHeight = findElement.height();
+            var windowHeight = $(window).height();
+            var offset;
+
+            if (elHeight < windowHeight) { offset = elOffset - ((windowHeight / 2) - (elHeight / 2)); } else { offset = elOffset; }
+            offset = parseInt(offset - 10);
+
+            timeout = setTimeout(function () {
+                $('div[ng-if="currentVersion"]').animate({ scrollTop: offset }, 750, function () {
+                    $(findElement).parent().addClass("selected");
+                });
+            }, 1000);
+        }
+    });
+
+    $.extend($.expr[':'], {
+        'containsi': function (elem, i, match, array) {
+            return (elem.textContent || elem.innerText || '').toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+        }
+    });
+</script>
+<form class="form-horizontal form" name="formStruct">
+    <div class="form-group" ng-init="setForm(formStruct, container)"></div>
+    <div class="text-center form-tittle">
+        <label class="ng-binding">Kit n°1 ADMISSION</label>
+    </div>
+    <!-- Date de livraison souhaitée -->
+    <div class="container-fluid">
+        <div class="col-md-3">
+            <label class="form-label">Date de livraison souhaitée</label>
+        </div>
+        <div class="col-md-9">
+            <mh-datepicker d-ng-required="true" format-date="true"
+                ng-model="container.dataContent.KIT1AHDateLivraison"></mh-datepicker>
+        </div>
+    </div>
+    <!-- Localisation HAD -->
+    <div class="container-fluid">
+        <div class="col-md-3">
+            <label class="form-label">Localisation HAD</label>
+        </div>
+        <div class="col-md-9 labelListMargin">
+            <label><input class="form-check-input" ng-model="container.dataContent.KIT1AHLocalisationHAD" required=""
+                    type="radio" value="Auch" /> HAD Auch</label>
+            <label><input class="form-check-input" ng-model="container.dataContent.KIT1AHLocalisationHAD" required=""
+                    type="radio" value="Demu" /> HAD Demu</label>
+        </div>
+    </div>
+    <!-- Kit de prise en charge adulte -->
+    <div class="container-fluid">
+        <div class="col-md-3">
+            <label class="form-label">Kit de prise en charge adulte</label>
+        </div>
+        <div class="col-md-9 labelListMargin">
+            <label><input class="form-check-input" ng-model="container.dataContent.KIT1AHTypeDeKit" type="radio"
+                    value="Inclusion" /> Inclusion</label>
+            <label><input class="form-check-input" ng-model="container.dataContent.KIT1AHTypeDeKit" type="radio"
+                    value="Renouvellement" /> Renouvellement</label>
+        </div>
+    </div>
+    <!-- OK délivrance (réservé préparateur) -->
+    <div class="container-fluid">
+        <div class="col-md-3">
+            <label class="form-label">OK délivrance</label>
+        </div>
+        <div class="col-md-9">
+            <label style="font-size:95%"><input class="form-check-input" mgapp-keyboard=""
+                    ng-model="container.dataContent.KIT1AHOKDelivrance" type="checkbox" /> (réservé préparateur)</label>
+        </div>
+    </div>
+    <!-- Rechercher -->
+    <div class="container-fluid no-print" id="rechercher_bloc">
+        <div class="col-md-3">
+            <label class="form-label">Rechercher un matériel</label>
+        </div>
+        <div class="col-md-9">
+            <input class="form-control" id="rechercher" name="" placeholder="Mots clés" style="width:initial"
+                type="text" />
+            <span class="nbResult" style="position: absolute;left: 250px;top: 8px;"></span>
+        </div>
+    </div>
+    <!-- Liste matériels -->
+    <div class="container-fluid table empty">
+        <div class="col-md-12">
+            <table class="table table-striped table-bordered caption-top">
+                <thead>
+                    <tr>
+                        <th scope="col">Type de matériel</th>
+                        <th scope="col">Quantité demandée</th>
+                        <th scope="col">Quantité délivrée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="empty">
+                        <th scope="row">Alcool 70°</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHAlcool70QDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHAlcool70QPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Alèze 60x90 (unité)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHAleze60x90QDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHAleze60x90QPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Anios gel flacon 500ml</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHAniosGelFlacon500mlQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHAniosGelFlacon500mlQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Blouse visiteur</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHBlouseVisiteurQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHBlouseVisiteurQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Bétadine alcoolique 125ml</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHBetadineAlcoolique125mlQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHBetadineAlcoolique125mlQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Bétadine dermique 125ml</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHBetadineDermique125mlQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHBetadineDermique125mlQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Bétadine scrub dosette 10ml (unité)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHBetadineScrubDosette10mlQDEM" type="number" />
+                        </td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHBetadineScrubDosette10mlQPRE" type="number" />
+                        </td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Carton Dasri</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCartonDasriQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCartonDasriQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Champs stérile non troué 45x50</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHChampsSterileNonTroue45x50QDEM" type="number" />
+                        </td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHChampsSterileNonTroue45x50QPRE" type="number" />
+                        </td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Charlotte (unité)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCharlotteQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCharlotteQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Chlorhexidine</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHChlorhexidineQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHChlorhexidineQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Chlorhexidine Hibiscrub</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHChlorhexidineHibiscrubQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHChlorhexidineHibiscrubQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Ciseaux stériles</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCiseauxSterilesQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCiseauxSterilesQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Collecteur à aiguille</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCollecteurAAiguilleQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCollecteurAAiguilleQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Compresses non stériles 7,5x7,5 (paquet de 100)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCompressesNonSteriles75x75QDEM" type="number" />
+                        </td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHCompressesNonSteriles75x75QPRE" type="number" />
+                        </td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Etiquettes date d’ouverture</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHEtiquettesDateDouvertureQDEM" type="number" />
+                        </td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHEtiquettesDateDouvertureQPRE" type="number" />
+                        </td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Etiquettes patient</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHEtiquettesPatientQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHEtiquettesPatientQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Gant vinyl taille 6/7 (boite de 100)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHGantVinylTaille67QDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHGantVinylTaille67QPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Gant vinyl taille 7/8 (boite de 100)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHGantVinylTaille78QDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHGantVinylTaille78QPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Gant vinyl taille 8/9 (boite de 100)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHGantVinylTaille89QDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHGantVinylTaille89QPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Kit prélèvement n°15</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHKitPrelevementN15QDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHKitPrelevementN15QPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Lingette désinfectantes</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHLingetteDesinfectantesQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHLingetteDesinfectantesQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Masque (unité)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHMasqueQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHMasqueQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Micropore (anapore)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHMicroporeQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHMicroporeQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">NACL 0,9% 50ml non injectable</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHNACL0950mlNonInjectableQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHNACL0950mlNonInjectableQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Peroxyde d'hydrogene (Eau oxygénée) Flacon de 250ml</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.Kitndeg1ADMISSIONPeroxydedhydrogeneEauoxygeneeFlaconde250mlQDEM"
+                                type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.Kitndeg1ADMISSIONPeroxydedhydrogeneEauoxygeneeFlaconde250mlQDEL"
+                                type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Poche poubelle jaune (Dasri) (rouleau)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHPochePoubelleJauneQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHPochePoubelleJauneQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Poche poubelle noires (DAS/DAOM) (rouleau)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHPochePoubelleNoiresQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHPochePoubelleNoiresQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Savon doux</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHSavonDouxQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHSavonDouxQPRE" type="number" /></td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Spray nettoyant désinfectant</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHSprayNettoyantDesinfectantQDEM" type="number" />
+                        </td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHSprayNettoyantDesinfectantQPRE" type="number" />
+                        </td>
+                    </tr>
+                    <tr class="empty">
+                        <th scope="row">Surchaussure (paire)</th>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHSurchaussureQDEM" type="number" /></td>
+                        <td><input class="form-control" mgapp-keyboard="" min="0"
+                                ng-model="container.dataContent.KIT1AHSurchaussureQPRE" type="number" /></td>
+                    </tr>
+                
+                <tr class="empty">
+                    <th scope="row">Pilulier semainier</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg1ADMISSIONPiluliersemainierQDEM" mgapp-keyboard class="form-control" min="0"/>
+                    </td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg1ADMISSIONPiluliersemainierQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">Pilulier journalier</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg1ADMISSIONPilulierjournalierQDEM" mgapp-keyboard class="form-control" min="0"/>
+                    </td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg1ADMISSIONPilulierjournalierQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="col-md-12">
+            <h4>Autres informations</h4>
+        </div>
+    </div>
+    <!-- Date -->
+    <div class="container-fluid">
+        <div class="col-md-2">
+            <label class="form-label">Date</label>
+        </div>
+        <div class="col-md-10">
+            <mh-datepicker format-date="true" ng-model="container.dataContent.KIT1AHDate"></mh-datepicker>
+        </div>
+    </div>
+    <!-- Identité -->
+    <div class="container-fluid">
+        <div class="col-md-2">
+            <label class="form-label">Identité</label>
+        </div>
+        <div class="col-md-10">
+            <input class="form-control" mgapp-keyboard="" ng-model="container.dataContent.KIT1AHIdentite" type="text" />
+        </div>
+    </div>
+    <!-- Initiales préparateur -->
+    <div class="container-fluid">
+        <div class="col-md-2">
+            <label class="form-label">Initiales préparateur</label>
+        </div>
+        <div class="col-md-10">
+            <input class="form-control" mgapp-keyboard="" ng-model="container.dataContent.KIT1AHInitialesPreparateur"
+                type="text" />
+        </div>
+    </div>
+    <!-- Commentaires -->
+    <div class="container-fluid">
+        <div class="col-md-2">
+            <label class="form-label">Commentaires</label>
+        </div>
+        <div class="col-md-10">
+            <textarea class="form-control" mgapp-keyboard="" ng-model="container.dataContent.KIT1AHCommentaires"
+                rows="5"></textarea>
+        </div>
+    </div>
+</form>

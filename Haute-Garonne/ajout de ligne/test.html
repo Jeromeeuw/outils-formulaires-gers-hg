@@ -1,0 +1,541 @@
+<style type="text/css" media="screen">
+    h4 { font-weight: bold;margin-top:5px; }
+    .blue { background-color: #8DB3E2; }
+    .caption { padding: 15px; background-color: #8DB3E2; font-weight: bold; }
+    .content { padding: 15px; background-color: #8DB3E2; font-weight: bold; }
+    .container-fluid { padding:10px 0; }
+    .mt-1 { margin-top:10px; }
+    .mt-2 { margin-top:20px; }
+    .col-md-10 label, input[type=checkbox], input[type=radio] { cursor:pointer; }
+    .labelListMargin label { margin-right:5px; }
+    .labelList label { display:block;width:100%;margin-right:5px; }    
+  
+    table caption { font-weight:bold;font-size:1.75em;color: #333;padding-top: 0; }	
+    table thead tr th { color:#666;  }
+    table thead tr th:first-child { width:50%; }
+    .table { margin-bottom : 0; } 
+    .table-striped>tbody>tr:nth-of-type(odd) { 
+    background-color: #e5eaef; /* Couleur gris clair */
+  }
+    .table-bordered, .table-bordered>tbody>tr>td, 
+    .table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>td, 
+    .table-bordered>tfoot>tr>th, .table-bordered>thead>tr>td, 
+    .table-bordered>thead>tr>th {
+      vertical-align: middle;
+    }
+  /* Ligne sélectionnée en vert clair pour les lignes impaires */
+  table tr.selected:nth-of-type(odd), .table-striped>tbody>tr:nth-of-type(odd).selected {
+    background-color: #0db514; /* Vert clair */
+    color: #fff;
+    -webkit-transition: background-color 500ms linear;
+    -ms-transition: background-color 500ms linear;
+    transition: background-color 350ms linear;
+    box-shadow: inset 0em 0em 5px #32a137;
+  }
+  
+  /* Ligne sélectionnée en vert foncé pour les lignes paires */
+  table tr.selected:nth-of-type(even), .table-striped>tbody>tr:nth-of-type(even).selected {
+    background-color: #087a10; /* Vert foncé */
+    color: #fff;
+    -webkit-transition: background-color 500ms linear;
+    -ms-transition: background-color 500ms linear;
+    transition: background-color 350ms linear;
+    box-shadow: inset 0em 0em 5px #065c0b;
+  }
+
+@media print {
+  body {
+    font-size: 12px; /* Taille de texte plus petite */
+    margin: 0; /* Réduction des marges */
+    padding: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse; /* Bordures compactes */
+  }
+
+  th, td {
+    border: 1px solid black; /* Bordures fines et noires */
+    padding: 5px; /* Espacement réduit */
+    font-size: 12px; /* Texte des cellules plus petit */
+  }
+
+  thead {
+    display: table-header-group; /* Garde l'en-tête visible sur chaque page */
+  }
+
+  input[type="text"], textarea {
+    border: none; /* Supprime les bordures des champs */
+    background: none; /* Enlève les couleurs */
+  }
+
+  .btn, .sidebar, .header, .footer {
+    display: none; /* Cache les boutons et éléments inutiles */
+  }
+
+  h1, h2 {
+    font-size: 14px;
+    text-align: center; /* Titre centré */
+  }
+}
+
+  
+  </style> 
+  <script>
+  
+  $("div.sidebar-tools.col-sm-3.no-print.ng-scope button.btn.btn-validate.pull-right.ng-binding.ng-scope, #btn-print").click(function() {
+    $('tr.selected').removeClass("selected");
+    $('body, #medform-struct-container, form.form-horizontal, [bind-html-compile="::container.htmlContent"], [ng-if="::container.dataContent"], [ng-if="currentVersion"], .form-struct-body, [ng-init="setForm(formStruct, container)"]').attr("style", "background-color:#ffffff;");
+    $('.container-fluid').attr("style", "padding: 2px 0;");
+    $('.container-fluid:lt(4), .container-fluid:gt(-4)').css("font-size", "70%");
+    $('caption').attr("style", "padding-bottom: 2px;");
+    $('h4, table.table').attr("style", "font-size:70%;margin-bottom: 0;");
+    $('table.table').attr("style", "font-size:70%;");
+    $('.table>thead>tr>th').attr("style", "padding: 4px;");
+    $('.table>tbody>tr>th, .table>tbody>tr>td').attr("style", "padding:0;padding-left:5px;");
+    $('.form-control').removeClass("form-control");
+    $('[ng-hide="hideInput"]').attr("style", "color: #333;");
+  
+    $('div.table').each(function() {
+        var currentTable = $(this);
+  
+        $(currentTable).find('input[type=number]').each(function() {
+            var currentFirstNumberVal = $(this).eq(0).val();
+  
+            if (currentFirstNumberVal)  {       
+                 $(this).parents('div.table.empty').removeClass('empty');  
+            }
+        });
+        
+        if ($(this).hasClass("empty")) {
+          var myEl = angular.element(currentTable);
+          myEl.remove();   //removes element
+        }
+     });
+  
+    $('tbody tr').each(function() {
+        var currentTr = $(this);
+        $(currentTr).find('input[type=number]').each(function() {
+            var currentFirstNumberVal = $(this).eq(0).val();
+  
+            if (currentFirstNumberVal)  {       
+                 $(this).parents('tr.empty').removeClass('empty');  
+            }
+        });
+        
+        if ($(this).hasClass("empty")) {
+          var myEl = angular.element(currentTr);
+          myEl.remove();   //removes element
+        }
+     });
+  });
+  
+  var timeout = null;
+  
+  $(document).on('input', '#rechercher', function(e) {
+      clearTimeout(timeout);
+  
+      var keywords = $(this).val();
+      $("tbody tr").removeClass("selected"); // Réinitialise la ligne entière
+      $("td, th").removeClass("highlight highlight-alt"); // Réinitialise toutes les colonnes colorées
+      $('tr.empty').removeClass("selected");
+      $(".nbResult").text("").hide();
+  
+      if ($.trim(keywords) !== '') {   
+        var findElement = $("tbody tr th:containsi('" + keywords + "')");
+        $(".nbResult").html("Nombre de résultat" + ($(findElement).length > 1 ? "s" : "") + ": " + ("<strong>" + $(findElement).length) + "</strong>");
+        $(".nbResult").fadeIn();
+        $(".nbResult").hide(); // Cache les résultats lorsqu'il n'y a pas de recherche
+        var elOffset = findElement.offset().top;
+        var elHeight = findElement.height();
+        var windowHeight = $(window).height();
+        var offset;
+  
+        if (elHeight < windowHeight) { offset = elOffset - ((windowHeight / 2) - (elHeight / 2)); } else { offset = elOffset; }
+        offset = parseInt(offset - 10);
+  
+        timeout = setTimeout(function() { 
+          $('div[ng-if="currentVersion"]').animate({scrollTop:offset}, 750, function() {
+            $(findElement).parent().addClass("selected");
+          });
+        }, 1000);
+    return; // Arrête l'exécution ici
+      }
+  });
+  
+  $.extend($.expr[':'], {'containsi': function(elem, i, match, array) {
+    return (elem.textContent || elem.innerText || '').toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+  }
+  });
+  </script>
+  <form class="form-horizontal form" name="formStruct">
+  
+  <div class="form-group" ng-init="setForm(formStruct, container)"></div>
+  
+  <div class="text-center form-tittle">
+    <label class="ng-binding">Kit n°9 - Pansement Détersion</label>
+  </div>
+  
+  <!-- Date de livraison -->
+  <div class="container-fluid">
+    <div class="col-md-2">
+      <label class="form-label">Date</label>  
+    </div>
+    <div class="col-md-10">    
+      <mh-datepicker ng-model="container.dataContent.KIT12PDHDateLivraison" d-ng-required="true" format-date="true"></mh-datepicker>
+    </div>
+  </div>
+  
+  <!-- Localisation HAD -->
+  <div class="container-fluid">
+    <div class="col-md-2">
+      <label class="form-label">Localisation HAD</label>  
+    </div>
+    <div class="col-md-10 labelListMargin">    
+      <label><input type="radio" ng-model="container.dataContent.KIT12PDHLocalisationHAD" value="Toulouse" class="form-check-input" required/> HAD Toulouse</label>
+      <label><input type="radio" ng-model="container.dataContent.KIT12PDHLocalisationHAD" value="Carbonne" class="form-check-input" required/> HAD Carbonne</label>   
+      <label><input type="radio" ng-model="container.dataContent.KIT12PDHLocalisationHAD" value="union" class="form-check-input" required/> HAD L'Union</label> 
+    </div>
+  </div>
+  
+  <!-- Type de kit -->
+  <div class="container-fluid">
+    <div class="col-md-2">
+      <label class="form-label">Type de kit</label>  
+    </div>
+    <div class="col-md-10 labelListMargin">    
+      <label><input type="radio" ng-model="container.dataContent.KIT12PDHTypeDeKit" value="KitEntree" class="form-check-input"/> Kit entrée</label>
+      <label><input type="radio" ng-model="container.dataContent.KIT12PDHTypeDeKit" value="KitRenouvellement" class="form-check-input"/> Kit renouvellement</label>
+      <label><input type="radio" ng-model="container.dataContent.KIT12PDHTypeDeKit" value="KitExceptionnel" class="form-check-input"/> Kit exceptionnel</label>      
+    </div>
+  </div>
+  
+  <!-- OK délivrance (réservé préparateur) -->
+  <div class="container-fluid">
+    <div class="col-md-2">
+      <label class="form-label">OK délivrance</label>  
+    </div>
+    <div class="col-md-10">    
+      <label style="font-size:95%"><input type="checkbox" mgapp-keyboard ng-model="container.dataContent.KIT12PDHOKDelivrance" class="form-check-input"/> (réservé préparateur)</label>
+    </div>
+  </div>
+  
+  <!-- Rechercher -->
+  <div class="container-fluid no-print" id="rechercher_bloc">
+    <div class="col-md-2">
+      <label class="form-label">Rechercher un matériel</label>  
+    </div>
+    <div class="col-md-10">    
+      <input type="text" name="" id="rechercher" placeholder="Mots clés" class="form-control" style="width:initial"/>
+      <span class="nbResult" style="position: absolute;left: 225px;top: 8px;"></span>
+    </div>
+  </div>
+  
+  <!-- Matériels -->
+  <div class="container-fluid table">
+    <div class="col-md-12">   
+      <table class="table table-striped table-bordered caption-top">
+        <caption><h4>Matériels</h4></caption>
+        <thead>
+          <tr>
+            <th scope="col">Type de matériel</th>
+            <th scope="col">Référence</th>
+            <th scope="col">Quantité demandée</th>
+            <th scope="col">Quantité délivrée</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Aquacel Extra 12,5x12,5cm</th>
+            <td>MIAQU1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHAquacelExtra125x125cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHAquacelExtra125x125cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Aquacel Foam Sacrum 24x21,5cm REF 421580</th>
+            <td>UCAQU8</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHAquacelFoamSacrum24x215cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHAquacelFoamSacrum24x215cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Alginate Curasorb (Kendall) 10,2x10,2cm</th>
+            <td>MISOR1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHAlginateCurasorbKendall102x102cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHAlginateCurasorbKendall102x102cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Allevyn adhésif 12,5x12,5cm</th>
+            <td>MICOM2</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHAllevynAdhesif125x125cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHAllevynAdhesif125x125cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Duoderm EM 6x11cm</th>
+            <td>MIDUO3</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHDuodermEM6x11cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHDuodermEM6x11cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Duoderm EM 17,5x17,5cm</th>
+            <td>MIDUO2</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHDuodermEM175x175cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHDuodermEM175x175cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Mepilex Border Flex Ovale 7,5x9,5cm</th>
+            <td>UCMEP3</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHMepilexBorderFlexOvale75x95cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHMepilexBorderFlexOvale75x95cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Mepilex Border Flex Ovale 13,5x16,5cm</th>
+            <td>UCMEP1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHMepilexBorderFlexOvale135x165cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHMepilexBorderFlexOvale135x165cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Pans Americ Zetuvit STE 10x20cm BTE20 REF 413771</th>
+            <td>UCPAN3</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansAmericZetuvitSTE10x20cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansAmericZetuvitSTE10x20cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Pans Americ Zetuvit STE 20x20cm BTE15 REF 4137742</th>
+            <td>UCPAN5</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansAmericZetuvitSTE20x20cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansAmericZetuvitSTE20x20cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Pans Operdres film+compresse 9x5cm REF 37701</th>
+            <td>UCTEG7</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansOperdresFilmCompresse9x5cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansOperdresFilmCompresse9x5cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Pans Operdres film+compresse 9x15cm REF 37703</th>
+            <td>UCTEG8</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansOperdresFilmCompresse9x15cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansOperdresFilmCompresse9x15cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Pans Tegaderm Film 10x12cm</th>
+            <td>UCVIS2</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansTegadermFilm10x12cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPansTegadermFilm10x12cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Urgotul 10x10cm</th>
+            <td>MIURG2</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHUrgotul10x10cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHUrgotul10x10cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Bistouri complet lame droite n°11 REF BISSM110503</th>
+            <td>U7BIS1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBistouriCompletLameDroiteN11QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBistouriCompletLameDroiteN11QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Bistouri complet lame courbe n°23 REF T69223</th>
+            <td>U7BIS2</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBistouriCompletLameCourbeN23QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBistouriCompletLameCourbeN23QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Cathéter court sécurisé 22G 25mm REF 381823</th>
+            <td>U2CA28</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHCatheteeCourtSecurise22GQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHCatheteeCourtSecurise22GQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Champ non troué 45x50cm REF ES15225CE</th>
+            <td>UDCH26</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHChampNonTroue45x50GQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHChampNonTroue45x50GQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Champ non troué 75x75cm REF ES15222CE</th>
+            <td>UDCH16</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHChampNonTroue75x75GQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHChampNonTroue75x75GQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Ciseaux pointu / mousse 13cm REF 712066</th>
+            <td>PMCIS2</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHCiseauxPointuMousse13cmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHCiseauxPointuMousse13cmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Curette 4</th>
+            <td>U7CUR1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHCurette4QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHCurette4QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Gant D Interv stérile 6,5 REF 82275622</th>
+            <td>U7GA83</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHGantDIntervSterile65QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHGantDIntervSterile65QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Gant D Interv stérile 7 REF 82275702</th>
+            <td>U7GA84</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHGantDIntervSterile7QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHGantDIntervSterile7QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Gant D Interv stérile 8 REF 822751802</th>
+            <td>U7GA86</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHGantDIntervSterile8QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHGantDIntervSterile8QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">OTE Agraphe</th>
+            <td>U7OTA1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHOTEAgrapheQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHOTEAgrapheQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Poche Draina S (vidable avec fenêtre) 70mm REF 190100</th>
+            <td>U8PDR1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPocheDrainaS70mmQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHPocheDrainaS70mmQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Foche de recueil 2l stérile luer lock REF 2CHP401</th>
+            <td>UEPO14</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHFochederecueil2lsterileluerlockQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHFochederecueil2lsterileluerlockQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Redon Drainobag 300ml + Tubulure REF 5522340</th>
+            <td>U7TUB1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHRedonDrainobag300mlTubulureQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHRedonDrainobag300mlTubulureQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Set pansements REF 39003304</th>
+            <td>USSET4</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHSetPansementsREF39003304QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHSetPansementsREF39003304QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Set D'instrumentation REF 37003159</th>
+            <td>USSET6</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHSetDinstrumentationREF37003159QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHSetDinstrumentationREF37003159QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Seringue UU 20ml REF 300296</th>
+            <td>U2SE04</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHSeringueUU20mlQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHSeringueUU20mlQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Brava spray 50ml anti adhésif</th>
+            <td>MIBRA1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBravaSpray50mlAntiAdhesifQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBravaSpray50mlAntiAdhesifQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">NaCL 0,9% AMP plastique 10ml</th>
+            <td>MYCHL0</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHNaCL09AMPPlastique10mlQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHNaCL09AMPPlastique10mlQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Vaseline pommade 20gr</th>
+            <td>MIVAS2</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHVaselinePommade20grQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHVaselinePommade20grQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Gants toilettes jetables paquet de 100</th>
+            <td>ENGA11</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHGantsToilettesJetablesPaquet100QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHGantsToilettesJetablesPaquet100QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Bande Nyplex 7cm/4m REF 135165</th>
+            <td>QMBA16</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBandeNyplex7cm4mQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBandeNyplex7cm4mQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Bande Nyplex 15cm/4m REF 135168</th>
+            <td>QMBA17</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBandeNyplex15cm4mQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBandeNyplex15cm4mQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Bande Velpeau 15cm/4m REF 32430</th>
+            <td>QMBA21</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBandeVelpeau15cm4mQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHBandeVelpeau15cm4mQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Comp 10x10cm non stérile REF 14014L</th>
+            <td>QMCOM3</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHComp10x10cmNonSterileQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHComp10x10cmNonSterileQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+          <tr>
+            <th scope="row">Urgoderm rouleau 10cm/10m</th>
+            <td>QMHYP1</td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHUrgodermRouleau10cm10mQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+            <td><input type="number" ng-model="container.dataContent.KIT12PDHUrgodermRouleau10cm10mQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+          </tr>
+        
+<tr class="empty">
+    <th scope="row">Aquacel Foam Sacrum 24x21,5cm REF 421580	</th>
+    <td>UCAQU8</td>
+    <td><input type="number" ng-model="container.dataContent.Kitndeg9PansementDetersionAquacelFoamSacrum24x215cmREF421580	QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+    <td><input type="number" ng-model="container.dataContent.Kitndeg9PansementDetersionAquacelFoamSacrum24x215cmREF421580	QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+</tr>
+<tr class="empty">
+    <th scope="row">Aquacel Foam Sacrum 24x21,5cm REF 421580	</th>
+    <td>MISOR1</td>
+    <td><input type="number" ng-model="container.dataContent.Kitndeg9PansementDetersionAquacelFoamSacrum24x215cmREF421580	QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+    <td><input type="number" ng-model="container.dataContent.Kitndeg9PansementDetersionAquacelFoamSacrum24x215cmREF421580	QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+</tr></tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="container-fluid">
+    <div class="col-md-12">
+      <h4>Autres informations</h4>
+    </div>
+  </div>
+  
+  <!-- Initiales IDE -->
+  <div class="container-fluid">
+    <div class="col-md-2">
+      <label class="form-label">Initiales IDE</label>  
+    </div>
+    <div class="col-md-10">    
+      <input type="text" mgapp-keyboard ng-model="container.dataContent.KIT12PDHInitialesIDE" class="form-control"/>
+    </div>
+  </div>
+  
+  <!-- Initiales préparateur -->
+  <div class="container-fluid">
+    <div class="col-md-2">
+      <label class="form-label">Initiales préparateur</label>  
+    </div>
+    <div class="col-md-10">    
+      <input type="text" mgapp-keyboard ng-model="container.dataContent.KIT12PDHInitialesPreparateur" class="form-control"/>
+    </div>
+  </div>
+  
+  <!-- Remarques -->
+  <div class="container-fluid">
+    <div class="col-md-2">
+      <label class="form-label">Remarques</label>  
+    </div>
+    <div class="col-md-10">    
+      <textarea mgapp-keyboard class="form-control" ng-model="container.dataContent.KIT12PDHRemarques" rows="5"></textarea>
+    </div>
+  </div>
+  </form>

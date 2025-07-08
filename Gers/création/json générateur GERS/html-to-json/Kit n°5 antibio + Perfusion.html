@@ -1,0 +1,416 @@
+<style type="text/css" media="screen">
+    h4 { font-weight: bold;margin-top:5px; }
+    .blue { background-color: #8DB3E2; }
+    .caption { padding: 15px; background-color: #8DB3E2; font-weight: bold; }
+    .content { padding: 15px; background-color: #8DB3E2; font-weight: bold; }
+    .container-fluid { padding:10px 0; }
+    .mt-1 { margin-top:10px; }
+    .mt-2 { margin-top:20px; }
+    .col-md-9 label, input[type=checkbox], input[type=radio] { cursor:pointer; }
+    .labelListMargin label { margin-right:5px; }
+    .labelList label { display:block;width:100%;margin-right:5px; }    
+
+    table caption { font-weight:bold;font-size:1.75em;color: #333;padding-top: 0; }	
+    table thead tr th { color:#666;  }
+    table thead tr th:first-child { width:50%; }
+    .table { margin-bottom : 0; } 
+    .table-striped>tbody>tr:nth-of-type(odd) { */background-color: #f5f5f5;*/ }
+    .table-bordered, .table-bordered>tbody>tr>td, .table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>td, .table-bordered>tfoot>tr>th, .table-bordered>thead>tr>td, .table-bordered>thead>tr>th {
+      vertical-align: middle;
+    }
+    table tr.selected, .table-striped>tbody>tr:nth-of-type(odd).selected { 
+      background-color: #0db514;
+      color: #fff;
+      -webkit-transition: background-color 500ms linear;
+      -ms-transition: background-color 500ms linear;
+      transition: background-color 350ms linear;
+      box-shadow: inset 0em 0em 5px #32a137;
+    }   
+</style> 
+<script>
+  $(document).on('change','input[type=number]',function() {
+    var getInputValTest = $(this).val();
+
+    if (getInputValTest > 0) {
+       $(this).parents('tr.empty').removeClass('empty');
+       $(this).parents('div.table.empty').removeClass('empty');
+    } else if (getInputValTest <= 0) {
+       $(this).closest('tr').addClass('empty')
+    }
+  });
+
+  $("div.sidebar-tools.col-sm-3.no-print.ng-scope button.btn.btn-validate.pull-right.ng-binding.ng-scope, #btn-print").click(function() {
+    $('tr.selected').removeClass("selected");
+    $('body, #medform-struct-container, form.form-horizontal, [bind-html-compile="::container.htmlContent"], [ng-if="::container.dataContent"], [ng-if="currentVersion"], .form-struct-body, [ng-init="setForm(formStruct, container)"]').attr("style", "background-color:#ffffff;");
+    $('.container-fluid').attr("style", "padding: 2px 0;");
+    $('.container-fluid:lt(4), .container-fluid:gt(-5)').css("font-size", "70%");
+    $('caption').attr("style", "padding-bottom: 2px;");
+    $('h4, table.table').attr("style", "font-size:70%;margin-bottom: 0;");
+    $('table.table').attr("style", "font-size:70%;");
+    $('.table>thead>tr>th').attr("style", "padding: 4px;");
+    $('.table>tbody>tr>th, .table>tbody>tr>td').attr("style", "padding:0;padding-left:5px;");
+    $('.form-control').removeClass("form-control");
+    $('[ng-hide="hideInput"]').attr("style", "color: #333;");
+
+    $('div.table').each(function() {
+        var currentTable = $(this);
+
+        $(currentTable).find('input[type=number]').each(function() {
+            var currentFirstNumberVal = $(this).eq(0).val();
+
+            if (currentFirstNumberVal)  {       
+                 $(this).parents('div.table.empty').removeClass('empty');  
+            }
+        });
+        
+        if ($(this).hasClass("empty")) {
+          var myEl = angular.element(currentTable);
+          myEl.remove();   //removes element
+        }
+     });
+
+    $('tbody tr').each(function() {
+        var currentTr = $(this);
+        $(currentTr).find('input[type=number]').each(function() {
+            var currentFirstNumberVal = $(this).eq(0).val();
+
+            if (currentFirstNumberVal)  {       
+                 $(this).parents('tr.empty').removeClass('empty');  
+            }
+        });
+        
+        if ($(this).hasClass("empty")) {
+          var myEl = angular.element(currentTr);
+          myEl.remove();   //removes element
+        }
+     });
+  });
+
+  var timeout = null;
+
+  $(document).on('input', '#rechercher', function(e) {
+      clearTimeout(timeout);
+
+      var keywords = $(this).val();
+      $('tr.empty').removeClass("selected");
+      $(".nbResult").text("").hide();
+
+      if ($.trim(keywords) !== '') {
+        var findElement = $("tbody tr th:containsi('" + keywords + "')");
+        $(".nbResult").html("Nombre de résultat" + ($(findElement).length > 1 ? "s" : "") + ": " + ("<strong>" + $(findElement).length) + "</strong>");
+        $(".nbResult").fadeIn();
+        var elOffset = findElement.offset().top;
+        var elHeight = findElement.height();
+        var windowHeight = $(window).height();
+        var offset;
+
+        if (elHeight < windowHeight) { offset = elOffset - ((windowHeight / 2) - (elHeight / 2)); } else { offset = elOffset; }
+        offset = parseInt(offset - 10);
+
+        timeout = setTimeout(function() { 
+          $('div[ng-if="currentVersion"]').animate({scrollTop:offset}, 750, function() {
+            $(findElement).parent().addClass("selected");
+          });
+        }, 1000);
+      }
+  });
+
+  $.extend($.expr[':'], {'containsi': function(elem, i, match, array) {
+    return (elem.textContent || elem.innerText || '').toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+  }
+  });
+</script>
+    
+<form class="form-horizontal form" name="formStruct">
+
+  <div class="form-group" ng-init="setForm(formStruct, container)"></div>
+
+  <div class="text-center form-tittle">
+    <label class="ng-binding">Kit n°5 antibio + Perfusion</label>
+  </div>
+
+  <!-- Date de livraison souhaitée -->
+  <div class="container-fluid">
+    <div class="col-md-3">
+      <label class="form-label">Date de livraison souhaitée</label>
+    </div>
+    <div class="col-md-9">    
+      <mh-datepicker ng-model="container.dataContent.Kitndeg5antibioPerfusionDateLivraison" d-ng-required="true" format-date="true"></mh-datepicker>
+    </div>
+  </div>
+
+  <!-- Localisation HAD -->
+  <div class="container-fluid">
+    <div class="col-md-3">
+      <label class="form-label">Localisation HAD</label>  
+    </div>
+    <div class="col-md-9 labelListMargin">    
+      <label><input type="radio" ng-model="container.dataContent.Kitndeg5antibioPerfusionLocalisationHAD" value="Auch" class="form-check-input" required/> HAD Auch</label>
+      <label><input type="radio" ng-model="container.dataContent.Kitndeg5antibioPerfusionLocalisationHAD" value="Demu" class="form-check-input" required/> HAD Demu</label>   
+    </div>
+  </div>
+
+  <!-- Type de kit -->
+  <div class="container-fluid">
+    <div class="col-md-3">
+      <label class="form-label">Type de kit</label>  
+    </div>
+    <div class="col-md-9 labelListMargin">    
+      <label><input type="radio" ng-model="container.dataContent.Kitndeg5antibioPerfusionTypeDeKit" value="Inclusion" class="form-check-input"/> Inclusion</label>
+      <label><input type="radio" ng-model="container.dataContent.Kitndeg5antibioPerfusionTypeDeKit" value="Renouvellement" class="form-check-input"/> Renouvellement</label>      
+    </div>
+  </div>
+
+  <!-- OK délivrance (réservé préparateur) -->
+  <div class="container-fluid">
+    <div class="col-md-3">
+      <label class="form-label">OK délivrance</label>  
+    </div>
+    <div class="col-md-9">    
+      <label style="font-size:95%"><input type="checkbox" mgapp-keyboard ng-model="container.dataContent.Kitndeg5antibioPerfusionDelivrance" class="form-check-input"/> (réservé préparateur)</label>
+    </div>
+  </div>
+
+  <!-- Rechercher -->
+  <div class="container-fluid no-print" id="rechercher_bloc">
+    <div class="col-md-3">
+      <label class="form-label">Rechercher un matériel</label> 
+    </div>
+    <div class="col-md-9">    
+      <input type="text" name="" id="rechercher" placeholder="Mots clés" class="form-control" style="width:initial"/>
+      <span class="nbResult" style="position: absolute;left: 250px;top: 8px;"></span>
+    </div>
+</div>
+    
+        <div class="container-fluid table empty">
+            <div class="col-md-12">
+                <h4>Matériels</h4>
+        <table class="table table-striped table-bordered caption-top">
+            <thead>
+                <tr>
+                    <th>Type de matériel</th>
+                    <th>Quantité Demandée</th>
+                    <th>Quantité Livrée</th>
+                </tr>
+            </thead>
+            <tbody>
+        
+                <tr class="empty">
+                    <th scope="row">POMPE À PERFUSION RYTHMIC MULTI THÉRAPIE</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionPOMPEAPERFUSIONRYTHMICMULTITHERAPIEQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionPOMPEAPERFUSIONRYTHMICMULTITHERAPIEQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">TUBULURE POUR POMPE MULTI THÉRAPIE SANS RÉSERVOIR</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionTUBULUREPOURPOMPEMULTITHERAPIESANSRESERVOIRQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionTUBULUREPOURPOMPEMULTITHERAPIESANSRESERVOIRQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">NACL 0.9% 20 ML (UNITE)</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionNACL0920MLUNITEQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionNACL0920MLUNITEQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">NACL 0.9% 50ML</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionNACL0950MLQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionNACL0950MLQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">NACL 0.9% 100ML</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionNACL09100MLQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionNACL09100MLQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">NACL 0.9% 250ML</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionNACL09250MLQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionNACL09250MLQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">INFUSEUR / DIFFUSEUR LOCK 125ML (5ML/24H)</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionINFUSEURDIFFUSEURLOCK125ML5ML24HQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionINFUSEURDIFFUSEURLOCK125ML5ML24HQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">INFUSEUR / DIFFUSEUR LOCK 270ML (10ML/24H)</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionINFUSEURDIFFUSEURLOCK270ML10ML24HQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionINFUSEURDIFFUSEURLOCK270ML10ML24HQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">SERINGUE LUER LOCK 5 ML</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSERINGUELUERLOCK5MLQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSERINGUELUERLOCK5MLQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">SERINGUE LUER LOCK 10ML</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSERINGUELUERLOCK10MLQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSERINGUELUERLOCK10MLQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">SERINGUE LUER LOCK 20ML</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSERINGUELUERLOCK20MLQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSERINGUELUERLOCK20MLQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">SERINGUE LUER LOCK 50ML</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSERINGUELUERLOCK50MLQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSERINGUELUERLOCK50MLQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">ROBINET 3 VOIES</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionROBINET3VOIESQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionROBINET3VOIESQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">BOUCHON STANDARD LOCK</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionBOUCHONSTANDARDLOCKQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionBOUCHONSTANDARDLOCKQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">AIGUILLE TROCARD 19G</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionAIGUILLETROCARD19GQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionAIGUILLETROCARD19GQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">REGULFLOW / DOSIFLOW</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionREGULFLOWDOSIFLOWQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionREGULFLOWDOSIFLOWQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">VALVE BI DIRECTIONNELLE</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionVALVEBIDIRECTIONNELLEQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionVALVEBIDIRECTIONNELLEQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">PERFUSEUR ROBINET 3 VOIES</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionPERFUSEURROBINET3VOIESQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionPERFUSEURROBINET3VOIESQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">PROLONGATEUR 3MM / 0,25M</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionPROLONGATEUR3MM025MQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionPROLONGATEUR3MM025MQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">CHAMPS STÉRILE NON TROUÉ 45X50</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCHAMPSSTERILENONTROUE45X50QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCHAMPSSTERILENONTROUE45X50QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">COMPRESSE STÉRILE 7.5 X 7.5</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCOMPRESSESTERILE75X75QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCOMPRESSESTERILE75X75QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">BANDE NYLEX (UNITE)</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionBANDENYLEXUNITEQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionBANDENYLEXUNITEQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">PANSEMENT TEGADERM (10X12)</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionPANSEMENTTEGADERM10X12QDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionPANSEMENTTEGADERM10X12QDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">ELASTOMULL</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionELASTOMULLQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionELASTOMULLQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">MICROPORE</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionMICROPOREQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionMICROPOREQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">CATHÉTER 20G</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCATHETER20GQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCATHETER20GQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">CATHÉTER 22G</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCATHETER22GQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCATHETER22GQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">CATHÉTER 24G</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCATHETER24GQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionCATHETER24GQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">SUPPORT POMPE MULTI-THÉRAPIE</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSUPPORTPOMPEMULTITHERAPIEQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionSUPPORTPOMPEMULTITHERAPIEQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            
+                <tr class="empty">
+                    <th scope="row">VALVE ANTI RETOUR</th>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionVALVEANTIRETOURQDEM" mgapp-keyboard class="form-control" min="0"/></td>
+                    <td><input type="number" ng-model="container.dataContent.Kitndeg5antibioPerfusionVALVEANTIRETOURQDEL" mgapp-keyboard class="form-control" min="0"/></td>
+                </tr>
+            </tbody></table></div></div>
+    <div class="container-fluid">
+        <div class="col-md-12">
+            <h4>Autres informations</h4>
+        </div>
+    </div>
+    <!-- Date -->
+  <div class="container-fluid">
+    <div class="col-md-2">
+      <label class="form-label">Date</label>  
+    </div>
+    <div class="col-md-10">    
+      <mh-datepicker ng-model="container.dataContent.Kitndeg5antibioPerfusionDate" format-date="true"></mh-datepicker>
+    </div>
+  </div>
+    <div class="container-fluid">
+        <div class="col-md-2">
+            <label class="form-label">Identité</label>
+        </div>
+        <div class="col-md-10">
+            <input type="text" mgapp-keyboard ng-model="container.dataContent.Kitndeg5antibioPerfusionInitialesIDE" class="form-control"/>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="col-md-2">
+            <label class="form-label">Initiales préparateur</label>
+        </div>
+        <div class="col-md-10">
+            <input type="text" mgapp-keyboard ng-model="container.dataContent.Kitndeg5antibioPerfusionInitialesPreparateur" class="form-control"/>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="col-md-2">
+            <label class="form-label">Remarques</label>
+        </div>
+        <div class="col-md-10">
+            <textarea mgapp-keyboard class="form-control" ng-model="container.dataContent.Kitndeg5antibioPerfusionRemarques" rows="5"></textarea>
+        </div>
+    </div>
+    </form>
